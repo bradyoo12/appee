@@ -1,0 +1,25 @@
+{
+  "name": "appee",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Personalized mobile app generator. Sign up, get a real app on your phone in 5 minutes, and watch it adapt to you over time.",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "turbo": "2.3.3",
+    "typescript": "5.6.3"
+  }
+}
