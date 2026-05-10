@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "appee Hello",
+    "slug": "appee-hello-base",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "appeebase",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.appee.hellobase"
+    },
+    "android": {
+      "package": "app.appee.hellobase",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
