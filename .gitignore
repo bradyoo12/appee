@@ -5,6 +5,7 @@ node_modules/
 # Build outputs
 dist/
 build/
+!apps/console/app/build/
 out/
 .next/
 .expo/
@@ -23,6 +24,7 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+scripts/.screenshots/
 
 # Native build artifacts
 ios/Pods/
