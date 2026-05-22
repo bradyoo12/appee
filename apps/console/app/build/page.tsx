@@ -97,7 +97,7 @@ function BuildPageInner() {
           <p className="text-sm text-zinc-600 mt-1">
             {error
               ? `EAS 연결 실패: ${error}`
-              : '평균 1–3분. 그동안 인터뷰부터 시작할게요.'}
+              : '평균 7–12분. 그동안 인터뷰부터 시작할게요.'}
           </p>
 
           <ol className="mt-6 space-y-4">
