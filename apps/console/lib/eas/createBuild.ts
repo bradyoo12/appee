@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import * as tar from 'tar';
+import { customAlphabet } from 'nanoid';
 import { easGraphQL } from './client';
 
-// appee-hello-base (ADR 0004). Slice 0 uses one shared project (ADR 0005).
+// appee-hello-base (ADR 0004). Slice 0 uses one shared EAS project (ADR 0005);
+// per-build isolation comes from Android package name, not project.
 const APP_ID = '5deac01b-4fdd-4b39-87eb-aad5f8b0130d';
 
 // Workspace root template — dev cwd is apps/console; reach across two levels.
@@ -38,15 +40,45 @@ async function streamToBuffer(stream: Readable): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+// Android package name allowed chars: lowercase letters, digits, underscores per segment.
+// We use 8-char alphanumeric (lowercase) so it fits both Android package and Expo slug rules.
+const shortId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 8);
+
+type AppIdentity = {
+  shortId: string;
+  androidPackage: string; // app.appee.u{shortId}
+  slug: string; // u-{shortId}
+  appName: string; // first ~10 chars of headline, fallback "내 앱"
+};
+
+function deriveIdentity(headline: string): AppIdentity {
+  const sid = shortId();
+  return {
+    shortId: sid,
+    androidPackage: `app.appee.u${sid}`,
+    slug: `u-${sid}`,
+    appName: headline.slice(0, 10).trim() || '내 앱',
+  };
+}
+
 /** Copy templates/expo-base to a scratch dir and substitute placeholders. */
-function makeSubstitutedDir(headline: string): string {
+function makeSubstitutedDir(headline: string, identity: AppIdentity): string {
   const dir = mkdtempSync(join(tmpdir(), 'appee-build-'));
   cpSync(TEMPLATE_DIR, dir, { recursive: true });
 
-  // Substitute {{HEADLINE}} in the one place that uses it (Slice 0 has a single placeholder).
+  // 1. {{HEADLINE}} in the on-phone screen.
   const indexPath = join(dir, 'app', 'index.tsx');
-  const src = readFileSync(indexPath, 'utf-8');
-  writeFileSync(indexPath, src.replaceAll('{{HEADLINE}}', headline), 'utf-8');
+  const indexSrc = readFileSync(indexPath, 'utf-8');
+  writeFileSync(indexPath, indexSrc.replaceAll('{{HEADLINE}}', headline), 'utf-8');
+
+  // 2. {{APP_NAME}} / {{SLUG}} / {{ANDROID_PACKAGE}} in app.json — per-user identity.
+  const appJsonPath = join(dir, 'app.json');
+  let appJsonSrc = readFileSync(appJsonPath, 'utf-8');
+  appJsonSrc = appJsonSrc
+    .replaceAll('{{APP_NAME}}', identity.appName)
+    .replaceAll('{{SLUG}}', identity.slug)
+    .replaceAll('{{ANDROID_PACKAGE}}', identity.androidPackage);
+  writeFileSync(appJsonPath, appJsonSrc, 'utf-8');
 
   return dir;
 }
@@ -64,8 +96,10 @@ type CreateBuildResult = {
 export async function triggerEasAndroidBuild(input: { headline: string }): Promise<{
   buildId: string;
   status: string;
+  androidPackage: string;
 }> {
-  const scratchDir = makeSubstitutedDir(input.headline);
+  const identity = deriveIdentity(input.headline);
+  const scratchDir = makeSubstitutedDir(input.headline, identity);
   try {
     // 1. tar.gz the substituted template in-memory.
     const tarStream = tar.create(
@@ -131,8 +165,8 @@ export async function triggerEasAndroidBuild(input: { headline: string }): Promi
           expoPackageVersion: '52.0.49',
           appVersion: '0.1.0',
           appBuildVersion: '1',
-          appName: 'appee Hello',
-          appIdentifier: 'app.appee.hellobase',
+          appName: identity.appName,
+          appIdentifier: identity.androidPackage,
           message: input.headline,
         },
         buildParams: { resourceClass: 'ANDROID_MEDIUM' },
@@ -140,7 +174,7 @@ export async function triggerEasAndroidBuild(input: { headline: string }): Promi
     );
 
     const build = result.build.createAndroidBuild.build;
-    return { buildId: build.id, status: build.status };
+    return { buildId: build.id, status: build.status, androidPackage: identity.androidPackage };
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }

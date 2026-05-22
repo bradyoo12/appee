@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "appee Hello",
-    "slug": "appee-hello-base",
+    "name": "{{APP_NAME}}",
+    "slug": "{{SLUG}}",
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "appeebase",
@@ -9,10 +9,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.appee.hellobase"
+      "bundleIdentifier": "{{ANDROID_PACKAGE}}"
     },
     "android": {
-      "package": "app.appee.hellobase",
+      "package": "{{ANDROID_PACKAGE}}",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF"
       }
