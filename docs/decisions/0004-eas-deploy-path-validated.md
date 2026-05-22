@@ -96,7 +96,7 @@ EAS 빌드 시간: ~7~10분 (free tier 큐 포함).
 | 1, 2 (template clone + cd) | 워커에서 임시 디렉토리에 zip 만들기 |
 | 3 (eas login) | 서버 env `EXPO_TOKEN` (PAT) |
 | 4 (eas init) | 사용자당 EAS project 생성 또는 단일 project 재사용 (별도 결정) |
-| 5 (eas build) | EAS REST API `POST /v2/projects/{id}/builds` 또는 워커에서 `eas-cli` 셸아웃 |
+| 5 (eas build) | EAS GraphQL `createBuild` mutation (`https://api.expo.dev/graphql`). REST `/v2/...` 경로는 404 — [ADR 0006](0006-vercel-eas-rest-no-worker.md) 참조 |
 | 6 (URL/QR) | EAS webhook → Supabase row 업데이트 → 콘솔에서 `qrcode` 렌더 |
 | 7, 8 | 사용자 폰에서 그대로 (변화 없음) |
 
@@ -104,7 +104,7 @@ EAS 빌드 시간: ~7~10분 (free tier 큐 포함).
 
 본 ADR은 **수동 경로**만 검증. 자동화 시 추가로 깨질 가능성:
 
-- EAS REST API 직접 호출 시 빌드 trigger 페이로드 구조
+- EAS GraphQL `createBuild` mutation 정확한 schema (input types, 응답 shape)
 - pre-substituted zip 업로드 vs git URL 방식의 차이
 - 사용자당 EAS project 생성 API rate limit
 - Free tier 빌드 큐가 사용자 경험에 미치는 영향 (`5분 안에 설치` 약속과 충돌 여부)

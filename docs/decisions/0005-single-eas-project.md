@@ -19,9 +19,10 @@
 
 ```
 [빌드 트리거]
-  Vercel → EAS REST POST /v2/projects/{APPEE_PROJECT_ID}/builds
-    body.metadata = { userId: "u_xxx", appId: "a_yyy", headline: "..." }
-    응답.buildId 저장 → apps.eas_build_id
+  Vercel → EAS GraphQL mutation createBuild (https://api.expo.dev/graphql)
+    input.projectId = APPEE_PROJECT_ID
+    input.metadata = { userId: "u_xxx", appId: "a_yyy", headline: "..." }
+    응답 data.build.{...}.id 저장 → apps.eas_build_id
 
 [빌드 완료 webhook]
   EAS → Vercel /api/eas/webhook
