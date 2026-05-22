@@ -1,10 +1,28 @@
 import { Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { getBuild } from '@/lib/eas/queries';
 
-const INSTALL_URL =
-  'https://expo.dev/accounts/bradyoo12/projects/appee-hello-base/builds/9866e401-0a52-46aa-b715-3072225fad3d';
+const FIXTURE_BUILD_ID = '9866e401-0a52-46aa-b715-3072225fad3d';
 
-export default function InstallPage() {
+export default async function InstallPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
+  const { id } = await searchParams;
+  const buildId = id ?? FIXTURE_BUILD_ID;
+
+  let installUrl: string;
+  let label: string;
+  try {
+    const build = await getBuild(buildId);
+    installUrl = build.artifacts?.buildUrl ?? `https://expo.dev/builds/${buildId}`;
+    label = installUrl.replace(/^https?:\/\//, '');
+  } catch {
+    installUrl = `https://expo.dev/builds/${buildId}`;
+    label = `EAS 조회 실패 — fallback: ${buildId.slice(0, 8)}...`;
+  }
+
   return (
     <main className="min-h-screen flex items-start justify-center px-6 py-16">
       <div className="max-w-3xl w-full text-center">
@@ -18,9 +36,9 @@ export default function InstallPage() {
 
         <div className="mt-8 grid md:grid-cols-[auto_1fr] gap-8 items-center justify-items-center">
           <div className="bg-white border border-zinc-200 rounded-card p-6 shadow-soft-md inline-flex flex-col items-center gap-3 max-w-[248px]">
-            <QRCodeSVG value={INSTALL_URL} size={200} />
+            <QRCodeSVG value={installUrl} size={200} />
             <p className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 break-all text-center">
-              {INSTALL_URL.replace('https://', '')}
+              {label}
             </p>
           </div>
 

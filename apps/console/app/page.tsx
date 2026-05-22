@@ -15,7 +15,7 @@ export default function HomePage() {
           이 단계는 아직 mockup — 실제 EAS 트리거는 다음 슬라이스에서 연결됩니다.
         </p>
         <Link
-          href="/build"
+          href="/build?id=9866e401-0a52-46aa-b715-3072225fad3d"
           className="mt-8 inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-btn px-6 py-3 shadow-warm transition-transform duration-200 hover:-translate-y-0.5"
         >
           Deploy hello world <ArrowRight className="w-4 h-4" />

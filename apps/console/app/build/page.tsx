@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const STEPS = [
   {
@@ -18,24 +18,70 @@ const STEPS = [
   { title: 'Done — 폰으로 보내기', detail: 'QR + install_url 발급' },
 ] as const;
 
-const STEP_DURATION_MS = 2000;
-const NAVIGATE_DELAY_MS = 800;
+const FIXTURE_BUILD_ID = '9866e401-0a52-46aa-b715-3072225fad3d';
+const POLL_INTERVAL_MS = 3000;
+const FINISH_GRACE_MS = 1500;
+
+type BuildStatus = 'NEW' | 'IN_QUEUE' | 'IN_PROGRESS' | 'FINISHED' | 'ERRORED' | 'CANCELED';
+
+function statusToActiveIndex(status: BuildStatus): number {
+  switch (status) {
+    case 'NEW':
+    case 'IN_QUEUE':
+      return 0;
+    case 'IN_PROGRESS':
+      return 2;
+    case 'FINISHED':
+      return STEPS.length;
+    case 'ERRORED':
+    case 'CANCELED':
+      return -1;
+  }
+}
 
 export default function BuildPage() {
   const router = useRouter();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const buildId = searchParams.get('id') ?? FIXTURE_BUILD_ID;
+
+  const [status, setStatus] = useState<BuildStatus>('NEW');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (activeIndex >= STEPS.length) {
-      const t = setTimeout(() => router.push('/install'), NAVIGATE_DELAY_MS);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => setActiveIndex((i) => i + 1), STEP_DURATION_MS);
-    return () => clearTimeout(t);
-  }, [activeIndex, router]);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
 
-  const progressPct =
-    activeIndex >= STEPS.length ? 100 : Math.min(100, (activeIndex + 1) * 20);
+    async function poll() {
+      try {
+        const res = await fetch(`/api/builds/${buildId}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = (await res.json()) as { status: BuildStatus };
+        if (cancelled) return;
+        setStatus(data.status);
+
+        if (data.status === 'FINISHED') {
+          setTimeout(() => {
+            if (!cancelled) router.push(`/install?id=${buildId}`);
+          }, FINISH_GRACE_MS);
+          return;
+        }
+        if (data.status === 'ERRORED' || data.status === 'CANCELED') return;
+
+        timer = setTimeout(poll, POLL_INTERVAL_MS);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'unknown');
+      }
+    }
+
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [buildId, router]);
+
+  const activeIndex = statusToActiveIndex(status);
+  const progressPct = status === 'FINISHED' ? 100 : Math.min(100, (activeIndex + 1) * 20);
 
   return (
     <main className="min-h-screen flex items-start justify-center px-6 py-16">
@@ -43,10 +89,16 @@ export default function BuildPage() {
         <div className="rounded-card bg-white border border-zinc-100 shadow-soft-sm p-6">
           <div className="flex items-center justify-between">
             <p className="text-xs font-mono uppercase tracking-widest text-brand-700">Step 4 · build</p>
-            <span className="text-[11px] font-mono text-zinc-400">eas-build · profile: preview · android · apk</span>
+            <span className="text-[11px] font-mono text-zinc-400">
+              eas-build · {buildId.slice(0, 8)} · {status.toLowerCase()}
+            </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight mt-3">앱을 빚는 중...</h1>
-          <p className="text-sm text-zinc-600 mt-1">평균 1–3분. 그동안 인터뷰부터 시작할게요.</p>
+          <p className="text-sm text-zinc-600 mt-1">
+            {error
+              ? `EAS 연결 실패: ${error}`
+              : '평균 1–3분. 그동안 인터뷰부터 시작할게요.'}
+          </p>
 
           <ol className="mt-6 space-y-4">
             {STEPS.map((step, i) => {
