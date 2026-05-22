@@ -77,9 +77,19 @@ if (!putRes.ok) throw new Error(`upload failed: ${await putRes.text()}`);
 console.log('4. createAndroidBuild mutation ...');
 const buildRes = await gql(
   `
-  mutation Create($appId: ID!, $job: AndroidJobInput!, $metadata: BuildMetadataInput!) {
+  mutation Create(
+    $appId: ID!
+    $job: AndroidJobInput!
+    $metadata: BuildMetadataInput!
+    $buildParams: BuildParamsInput
+  ) {
     build {
-      createAndroidBuild(appId: $appId, job: $job, metadata: $metadata) {
+      createAndroidBuild(
+        appId: $appId
+        job: $job
+        metadata: $metadata
+        buildParams: $buildParams
+      ) {
         build {
           id
           status
@@ -110,10 +120,15 @@ const buildRes = await gql(
       distribution: 'INTERNAL',
       buildProfile: 'preview',
       workflow: 'MANAGED',
+      sdkVersion: '52.0.0',
+      expoPackageVersion: '52.0.49',
       appVersion: '0.1.0',
       appBuildVersion: '1',
       appName: 'appee Hello',
       appIdentifier: 'app.appee.hellobase',
+    },
+    buildParams: {
+      resourceClass: 'ANDROID_MEDIUM',
     },
   },
 );
