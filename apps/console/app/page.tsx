@@ -1,5 +1,12 @@
-import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
+import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
+
+async function deploy() {
+  'use server';
+  const { buildId } = await triggerEasAndroidBuild();
+  redirect(`/build?id=${buildId}`);
+}
 
 export default function HomePage() {
   return (
@@ -12,14 +19,16 @@ export default function HomePage() {
         <p className="text-sm text-zinc-600 mt-3">
           hello world 템플릿을 EAS Build에 보내서 폰에 설치할 수 있는 APK로 만듭니다.
           <br />
-          이 단계는 아직 mockup — 실제 EAS 트리거는 다음 슬라이스에서 연결됩니다.
+          버튼 클릭 시 실제 EAS 빌드 한 개가 큐잉됩니다.
         </p>
-        <Link
-          href="/build?id=9866e401-0a52-46aa-b715-3072225fad3d"
-          className="mt-8 inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-btn px-6 py-3 shadow-warm transition-transform duration-200 hover:-translate-y-0.5"
-        >
-          Deploy hello world <ArrowRight className="w-4 h-4" />
-        </Link>
+        <form action={deploy}>
+          <button
+            type="submit"
+            className="mt-8 inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-btn px-6 py-3 shadow-warm transition-transform duration-200 hover:-translate-y-0.5 cursor-pointer"
+          >
+            Deploy hello world <ArrowRight className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </main>
   );
