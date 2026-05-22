@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const STEPS = [
@@ -39,7 +39,7 @@ function statusToActiveIndex(status: BuildStatus): number {
   }
 }
 
-export default function BuildPage() {
+function BuildPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const buildId = searchParams.get('id') ?? FIXTURE_BUILD_ID;
@@ -134,5 +134,13 @@ export default function BuildPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function BuildPage() {
+  return (
+    <Suspense>
+      <BuildPageInner />
+    </Suspense>
   );
 }

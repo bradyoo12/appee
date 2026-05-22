@@ -1,4 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
-  - "templates/*"
+  # templates/* is intentionally excluded from the workspace:
+  # Expo SDK 52 forces React 18 (RN 0.76 peer), which conflicts with Next 15's React 19.
+  # With node-linker=hoisted (required by EAS per ADR 0004), workspace inclusion ends up
+  # with two physical React 19 copies (apps/console/.../react vs node_modules/next/.../react),
+  # tripping Next.js's prerender useContext-null bug. Templates are installed standalone
+  # at build time (EAS clones the template dir and runs its own pnpm install).
