@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "next": "^15.4.0",
@@ -16,8 +19,10 @@
     "react-dom": "^19.0.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
+    "drizzle-orm": "^0.38.3",
     "lucide-react": "^0.469.0",
     "nanoid": "^5.0.9",
+    "postgres": "^3.4.5",
     "qrcode.react": "^4.1.0",
     "server-only": "^0.0.1",
     "tar": "^7.5.15",
@@ -28,6 +33,7 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.30.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   }
