@@ -93,7 +93,11 @@ type CreateBuildResult = {
   build: { createAndroidBuild: { build: { id: string; status: string } } };
 };
 
-export async function triggerEasAndroidBuild(input: { headline: string }): Promise<{
+export async function triggerEasAndroidBuild(input: {
+  headline: string;
+  userId: string;
+  userEmail: string | null;
+}): Promise<{
   buildId: string;
   status: string;
   androidPackage: string;
@@ -167,7 +171,8 @@ export async function triggerEasAndroidBuild(input: { headline: string }): Promi
           appBuildVersion: '1',
           appName: identity.appName,
           appIdentifier: identity.androidPackage,
-          message: input.headline,
+          username: input.userEmail ?? input.userId,
+          message: `[${input.userId}] ${input.headline}`,
         },
         buildParams: { resourceClass: 'ANDROID_MEDIUM' },
       },
