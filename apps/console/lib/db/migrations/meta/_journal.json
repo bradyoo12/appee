@@ -8,6 +8,13 @@
       "when": 1779500842047,
       "tag": "0000_thin_skaar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779627718482,
+      "tag": "0001_chunky_zombie",
+      "breakpoints": true
     }
   ]
 }

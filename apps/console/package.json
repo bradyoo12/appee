@@ -10,7 +10,7 @@
     "lint": "biome check .",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push --force",
+    "db:push": "drizzle-kit push --force && pnpm db:apply-rls",
     "db:apply-rls": "node --env-file=.env.local scripts/apply-rls.mjs",
     "db:studio": "drizzle-kit studio",
     "test:e2e": "playwright test"

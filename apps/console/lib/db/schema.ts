@@ -48,3 +48,41 @@ export const apps = pgTable(
 
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
+
+// Stripe subscription mirror — one row per user (we don't support
+// multiple subs/user yet). The Stripe webhook is the source of truth;
+// this table is a read-side cache so build trigger can check
+// `is_active` without an extra API call per request.
+//
+// status mirrors Stripe's subscription.status enum but tightened to
+// the values we actually act on.
+export type SubscriptionStatus =
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'unpaid'
+  | 'paused';
+
+export const subscriptions = pgTable(
+  'subscriptions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull().unique(), // one sub/user (S0); revisit at team plans
+    stripeCustomerId: text('stripe_customer_id').notNull(),
+    stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+    stripePriceId: text('stripe_price_id').notNull(),
+    status: text('status').$type<SubscriptionStatus>().notNull(),
+    currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }).notNull(),
+    cancelAtPeriodEnd: timestamp('cancel_at_period_end', { withTimezone: true }),
+    trialEnd: timestamp('trial_end', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('subscriptions_customer_idx').on(t.stripeCustomerId)],
+);
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
