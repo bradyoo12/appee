@@ -1,5 +1,6 @@
 import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
 import { createClient } from '@/lib/supabase/server';
+import { hasActiveSubscription } from '@/lib/billing/check';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -9,6 +10,9 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  }
+  if (!(await hasActiveSubscription(user.id))) {
+    return NextResponse.json({ error: 'subscription_required' }, { status: 402 });
   }
 
   try {
