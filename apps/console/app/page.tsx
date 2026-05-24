@@ -1,9 +1,10 @@
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowRight, LogOut } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
 import { getMonthlyQuota } from '@/lib/billing/quota';
+import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
+import { createClient } from '@/lib/supabase/server';
+import { ArrowRight, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { DeployForm } from './_components/DeployForm';
 
 async function deploy(formData: FormData) {
   'use server';
@@ -57,7 +58,9 @@ export default async function HomePage() {
       )}
 
       <div className="text-center max-w-xl w-full">
-        <p className="text-xs font-mono uppercase tracking-widest text-brand-700">step 0 · deploy</p>
+        <p className="text-xs font-mono uppercase tracking-widest text-brand-700">
+          step 0 · deploy
+        </p>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mt-3">
           당신의 첫 앱을 <span className="font-display italic text-brand-500">5분</span>에.
         </h1>
@@ -66,22 +69,7 @@ export default async function HomePage() {
         </p>
 
         {user ? (
-          <form action={deploy} className="mt-8 flex flex-col items-center gap-4">
-            <textarea
-              name="headline"
-              rows={2}
-              maxLength={120}
-              defaultValue="매일 아침 부드럽게 명상을 알려주는 앱"
-              placeholder="예: 매일 아침 부드럽게 명상을 알려주는 앱"
-              className="block w-full max-w-md rounded-btn border border-zinc-200 bg-white p-3 text-sm shadow-soft-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-btn px-6 py-3 shadow-warm transition-transform duration-200 hover:-translate-y-0.5 cursor-pointer"
-            >
-              Deploy hello world <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+          <DeployForm action={deploy} />
         ) : (
           <div className="mt-8">
             <Link
