@@ -1,10 +1,10 @@
+import { db } from '@/lib/db/client';
+import { type AppStatus, apps } from '@/lib/db/schema';
+import { createClient } from '@/lib/supabase/server';
+import { desc, eq } from 'drizzle-orm';
+import { Download, Loader2, Plus, RefreshCcw, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { desc, eq } from 'drizzle-orm';
-import { Download, Loader2, RefreshCcw, TriangleAlert, Plus } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/lib/db/client';
-import { apps, type App, type AppStatus } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,13 +22,6 @@ function timeAgo(date: Date): string {
   if (s < 3600) return `${Math.floor(s / 60)}분 전`;
   if (s < 86400) return `${Math.floor(s / 3600)}시간 전`;
   return `${Math.floor(s / 86400)}일 전`;
-}
-
-function destinationFor(a: App): string | null {
-  if (a.status === 'ready' && a.easBuildId) return `/install?id=${a.easBuildId}`;
-  if (a.status === 'in_progress' && a.easBuildId) return `/build?id=${a.easBuildId}`;
-  if (a.status === 'preparing' && a.easBuildId) return `/build?id=${a.easBuildId}`;
-  return null;
 }
 
 export default async function DashboardPage() {
@@ -71,37 +64,31 @@ export default async function DashboardPage() {
         ) : (
           myApps.map((a) => {
             const meta = STATUS_META[a.status];
-            const dest = destinationFor(a);
-            const card = (
-              <article className="rounded-card bg-white border border-zinc-100 shadow-soft-sm p-5 hover:shadow-soft-md transition-shadow">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold truncate flex-1">{a.appName}</p>
-                  <span
-                    className={`inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full ${meta.klass}`}
-                  >
-                    {a.status === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
-                    {a.status === 'preparing' && <RefreshCcw className="w-3 h-3" />}
-                    {a.status === 'ready' && <Download className="w-3 h-3" />}
-                    {a.status === 'build_failed' && <TriangleAlert className="w-3 h-3" />}
-                    {meta.label}
-                  </span>
-                </div>
-                <p className="text-sm text-zinc-600 mt-1 line-clamp-2">{a.headline}</p>
-                <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400">
-                  <span>{a.packageName}</span>
-                  <span>{timeAgo(a.createdAt)}</span>
-                </div>
-                {a.status === 'build_failed' && a.errorMessage && (
-                  <p className="mt-2 text-xs text-red-600 break-words">{a.errorMessage}</p>
-                )}
-              </article>
-            );
-            return dest ? (
-              <Link key={a.id} href={dest} className="block">
-                {card}
+            return (
+              <Link key={a.id} href={`/apps/${a.id}`} className="block">
+                <article className="rounded-card bg-white border border-zinc-100 shadow-soft-sm p-5 hover:shadow-soft-md transition-shadow">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold truncate flex-1">{a.appName}</p>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full ${meta.klass}`}
+                    >
+                      {a.status === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
+                      {a.status === 'preparing' && <RefreshCcw className="w-3 h-3" />}
+                      {a.status === 'ready' && <Download className="w-3 h-3" />}
+                      {a.status === 'build_failed' && <TriangleAlert className="w-3 h-3" />}
+                      {meta.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-zinc-600 mt-1 line-clamp-2">{a.headline}</p>
+                  <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                    <span>{a.packageName}</span>
+                    <span>{timeAgo(a.createdAt)}</span>
+                  </div>
+                  {a.status === 'build_failed' && a.errorMessage && (
+                    <p className="mt-2 text-xs text-red-600 break-words">{a.errorMessage}</p>
+                  )}
+                </article>
               </Link>
-            ) : (
-              <div key={a.id}>{card}</div>
             );
           })
         )}
