@@ -1,11 +1,13 @@
 import { expect, test } from './fixtures/auth';
 
-// #102 — Deploy button must disable + show "빌드 시작 중..." while the Server
-// Action is pending, so rapid double-clicks don't fire multiple EAS builds.
+// #102 + #104 — Deploy button must disable + show "빌드 시작 중..." while the
+// Server Action is pending, AND block rapid synchronous clicks before React
+// has re-rendered (the original useFormStatus + disabled fix from #102 had a
+// race the user reproduced in #104).
 //
-// Strategy: intercept the Server Action POST (Next.js posts to the page URL
-// with a `next-action` header) and add an artificial 2s delay. That gives a
-// measurable pending window without firing real EAS.
+// Strategy: intercept the Server Action POST (Next 15 fires it as POST to the
+// page URL with a `next-action` header). Add a 2s delay so the pending window
+// is observable, then return a redirect-equivalent.
 //
 // Auth fixture skips when SUPABASE_SERVICE_ROLE_KEY / DATABASE_URL unset, so
 // this stays CI-quiet until secrets land.
@@ -45,7 +47,7 @@ test('deploy button disables + shows "빌드 시작 중..." while pending', asyn
   await expect(page.locator('textarea[name="headline"]')).toBeDisabled();
 });
 
-test('rapid double-click fires the Server Action only once', async ({
+test('rapid synchronous clicks fire the Server Action only once (#104 race)', async ({
   page,
   seededApp: _seededApp,
 }) => {
@@ -53,8 +55,7 @@ test('rapid double-click fires the Server Action only once', async ({
   await page.route('**/', async (route, request) => {
     if (request.method() === 'POST' && request.headers()['next-action']) {
       postCount += 1;
-      // Hold the response open so the second click sees disabled state.
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 1500));
       return route.fulfill({
         status: 200,
         headers: { 'content-type': 'text/x-component' },
@@ -68,22 +69,24 @@ test('rapid double-click fires the Server Action only once', async ({
   const button = page.getByTestId('deploy-submit');
   await expect(button).toBeEnabled();
 
-  // First click → starts the Server Action. Don't await — fire and continue.
-  const firstClick = button.click();
-  // Wait just long enough for React to flush the pending state.
-  await expect(button).toBeDisabled({ timeout: 500 });
-
-  // Second click (rapid) — Playwright's click() respects disabled state by
-  // default and times out. Use a short timeout + catch so the test doesn't
-  // hang. Either outcome confirms the user can't fire a second submit.
-  await button.click({ timeout: 200, trial: false }).catch(() => {
-    /* expected: button is disabled */
+  // The race #104 demonstrated: 3-5 clicks fire synchronously, before React
+  // has re-rendered the button as disabled. Reproduce by triggering all
+  // clicks in the browser context within a single JS tick.
+  await page.evaluate(() => {
+    const btn = document.querySelector<HTMLButtonElement>('[data-testid="deploy-submit"]');
+    if (!btn) throw new Error('deploy-submit not found');
+    btn.click();
+    btn.click();
+    btn.click();
+    btn.click();
+    btn.click();
   });
 
-  await firstClick;
-
-  // Wait for the intercepted POST to resolve.
+  // Wait for the intercepted Server Action to resolve.
   await page.waitForTimeout(2500);
 
-  expect(postCount, 'Server Action should be called exactly once').toBe(1);
+  expect(
+    postCount,
+    'Server Action should be called exactly once even on 5x synchronous clicks',
+  ).toBe(1);
 });
