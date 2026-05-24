@@ -171,13 +171,13 @@ export default async function AppDetailPage({
       )}
 
       <Link
-        href={`/reverse?card=1&appId=${app.id}`}
+        href={`/apps/${app.id}/refine`}
         className="mt-5 block rounded-card bg-gradient-to-br from-brand-500 to-accent-500 text-white p-5 shadow-warm transition-transform duration-200 hover:-translate-y-0.5"
       >
         <p className="text-[10px] font-mono uppercase tracking-widest text-white/80">next</p>
         <p className="text-lg font-bold mt-1">이 앱을 계속 다듬어볼까요?</p>
         <p className="text-sm text-white/90 mt-1">
-          화면 · 기능 · 디자인을 한 카드씩 채워나갑니다. 매 변경은 즉시 폰에 반영돼요.
+          대화로 화면 · 기능 · 디자인을 함께 정해요. 매 결정은 즉시 폰에 반영돼요.
         </p>
         <span className="mt-4 inline-flex items-center gap-2 bg-white/95 text-brand-700 text-sm font-semibold rounded-btn px-4 py-2 shadow-sm">
           이 앱 계속 다듬기 <ArrowRight className="w-4 h-4" />
