@@ -22,13 +22,21 @@ async function upsertSubscription(sub: Stripe.Subscription) {
     return;
   }
   const stripeCustomerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
-  const stripePriceId = sub.items.data[0]?.price.id;
-  if (!stripePriceId) {
+  // As of Stripe API 2025-08+, current_period_end moved from the subscription
+  // to each subscription_item. We use the first item (single-plan subs only).
+  const firstItem = sub.items.data[0];
+  if (!firstItem) {
     console.warn(`subscription ${sub.id} has no line items — skipping`);
     return;
   }
+  const stripePriceId = firstItem.price.id;
 
-  const periodEnd = toDate(sub.current_period_end);
+  // SDK types still expect this on Subscription; the API moved it to
+  // SubscriptionItem in 2025-08+. Fall back to either location.
+  const periodEndSeconds =
+    (firstItem as unknown as { current_period_end?: number }).current_period_end ??
+    (sub as unknown as { current_period_end?: number }).current_period_end;
+  const periodEnd = toDate(periodEndSeconds);
   if (!periodEnd) {
     console.warn(`subscription ${sub.id} has no current_period_end — skipping`);
     return;
