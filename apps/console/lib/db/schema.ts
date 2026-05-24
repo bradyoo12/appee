@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // Build lifecycle as far as our console cares about it.
 // Maps from EAS Build statuses + adds the pre-trigger 'preparing' state.
@@ -91,3 +91,30 @@ export const subscriptions = pgTable(
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+
+// Billing meter. One row per *successful* EAS build (status FINISHED).
+// Distinct from apps (intent) because:
+//   - failed builds don't count toward the user's monthly quota
+//   - apps row gets updated (status transitions); meter rows are immutable
+//   - retention policy is different (apps can be cleaned up; meter must
+//     stay for billing audit trail)
+// Insert site: EAS Build webhook (4.B), keyed by eas_build_id for
+// idempotency under Stripe-like retry behavior.
+export const buildUsage = pgTable(
+  'build_usage',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull(),
+    appId: uuid('app_id').notNull(), // FK to apps.id; not enforced at DB level
+    easBuildId: text('eas_build_id').notNull().unique(),
+    succeededAt: timestamp('succeeded_at', { withTimezone: true }).notNull().defaultNow(),
+    buildDurationSeconds: integer('build_duration_seconds'),
+  },
+  (t) => [
+    // quota query: count rows for user in the last calendar month
+    index('build_usage_user_succeeded_idx').on(t.userId, t.succeededAt.desc()),
+  ],
+);
+
+export type BuildUsage = typeof buildUsage.$inferSelect;
+export type NewBuildUsage = typeof buildUsage.$inferInsert;

@@ -22,6 +22,13 @@
       "when": 1779630233379,
       "tag": "0002_unknown_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779632460322,
+      "tag": "0003_lyrical_sunspot",
+      "breakpoints": true
     }
   ]
 }
