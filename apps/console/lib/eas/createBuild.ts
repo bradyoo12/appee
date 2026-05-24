@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import * as tar from 'tar';
 import { customAlphabet } from 'nanoid';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db/client';
+import { apps } from '@/lib/db/schema';
 import { easGraphQL } from './client';
 
 // appee-hello-base (ADR 0004). Slice 0 uses one shared EAS project (ADR 0005);
@@ -101,8 +104,28 @@ export async function triggerEasAndroidBuild(input: {
   buildId: string;
   status: string;
   androidPackage: string;
+  appId: string;
 }> {
   const identity = deriveIdentity(input.headline);
+
+  // Insert apps row first so it exists even if the EAS call fails — the
+  // row carries the user's intent (headline + identity) regardless of
+  // whether the build ever queues.
+  const inserted = await db
+    .insert(apps)
+    .values({
+      userId: input.userId,
+      shortId: identity.shortId,
+      packageName: identity.androidPackage,
+      slug: identity.slug,
+      appName: identity.appName,
+      headline: input.headline,
+      status: 'preparing',
+    })
+    .returning({ id: apps.id });
+  const appId = inserted[0]?.id;
+  if (!appId) throw new Error('insert apps row returned no id');
+
   const scratchDir = makeSubstitutedDir(input.headline, identity);
   try {
     // 1. tar.gz the substituted template in-memory.
@@ -179,7 +202,28 @@ export async function triggerEasAndroidBuild(input: {
     );
 
     const build = result.build.createAndroidBuild.build;
-    return { buildId: build.id, status: build.status, androidPackage: identity.androidPackage };
+
+    await db
+      .update(apps)
+      .set({ status: 'in_progress', easBuildId: build.id, updatedAt: new Date() })
+      .where(eq(apps.id, appId));
+
+    return {
+      buildId: build.id,
+      status: build.status,
+      androidPackage: identity.androidPackage,
+      appId,
+    };
+  } catch (err) {
+    await db
+      .update(apps)
+      .set({
+        status: 'build_failed',
+        errorMessage: err instanceof Error ? err.message : String(err),
+        updatedAt: new Date(),
+      })
+      .where(eq(apps.id, appId));
+    throw err;
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }
