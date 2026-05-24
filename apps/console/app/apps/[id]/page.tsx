@@ -104,8 +104,17 @@ export default async function AppDetailPage({
         </p>
       )}
 
+      {app.heroVariant && (
+        <p
+          data-testid="hero-variant-badge"
+          className="mt-3 inline-flex items-center gap-2 text-[11px] font-mono rounded-full bg-brand-50 text-brand-800 px-2.5 py-1"
+        >
+          hero: {app.heroVariant}
+        </p>
+      )}
+
       <Link
-        href="/reverse?card=1"
+        href={`/reverse?card=1&appId=${app.id}`}
         className="mt-5 block rounded-card bg-gradient-to-br from-brand-500 to-accent-500 text-white p-5 shadow-warm transition-transform duration-200 hover:-translate-y-0.5"
       >
         <p className="text-[10px] font-mono uppercase tracking-widest text-white/80">next</p>

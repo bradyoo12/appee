@@ -35,6 +35,11 @@ export const apps = pgTable(
     installUrl: text('install_url'), // EAS artifacts.buildUrl when FINISHED
     errorMessage: text('error_message'),
 
+    // Reverse-fill hero card selection (#97). One of 'warm' | 'mini' | 'list'
+    // when the user has picked, null otherwise. Server action validates the
+    // enum; column is plain text to keep the migration trivial.
+    heroVariant: text('hero_variant'),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
