@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
-import { hasActiveSubscription } from '@/lib/billing/check';
+import { getMonthlyQuota } from '@/lib/billing/quota';
 
 async function deploy(formData: FormData) {
   'use server';
@@ -12,7 +12,10 @@ async function deploy(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  if (!(await hasActiveSubscription(user.id))) redirect('/billing');
+
+  const quota = await getMonthlyQuota(user.id);
+  if (quota.tier === null) redirect('/billing');
+  if (quota.remaining === 0) redirect('/billing?quota=exhausted');
 
   const raw = formData.get('headline');
   const headline = (typeof raw === 'string' && raw.trim()) || 'Hello, appee';

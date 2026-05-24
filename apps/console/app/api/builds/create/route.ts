@@ -1,6 +1,6 @@
 import { triggerEasAndroidBuild } from '@/lib/eas/createBuild';
 import { createClient } from '@/lib/supabase/server';
-import { hasActiveSubscription } from '@/lib/billing/check';
+import { getMonthlyQuota } from '@/lib/billing/quota';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -11,8 +11,15 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }
-  if (!(await hasActiveSubscription(user.id))) {
+  const quota = await getMonthlyQuota(user.id);
+  if (quota.tier === null) {
     return NextResponse.json({ error: 'subscription_required' }, { status: 402 });
+  }
+  if (quota.remaining === 0) {
+    return NextResponse.json(
+      { error: 'quota_exceeded', used: quota.used, limit: quota.limit, resets_at: quota.resetsAt },
+      { status: 429 },
+    );
   }
 
   try {
