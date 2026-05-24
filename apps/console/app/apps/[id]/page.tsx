@@ -2,9 +2,18 @@ import { db } from '@/lib/db/client';
 import { type AppStatus, apps } from '@/lib/db/schema';
 import { createClient } from '@/lib/supabase/server';
 import { and, eq } from 'drizzle-orm';
-import { ArrowLeft, ArrowRight, Download, Loader2, RefreshCcw, TriangleAlert } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Download,
+  Loader2,
+  Pencil,
+  RefreshCcw,
+  TriangleAlert,
+} from 'lucide-react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { updateHeadline } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,11 +39,16 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export default async function AppDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ edit?: string }>;
 }) {
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
+
+  const { edit } = await searchParams;
+  const isEditingHeadline = edit === 'headline';
 
   const supabase = await createClient();
   const {
@@ -63,12 +77,55 @@ export default async function AppDetailPage({
       </Link>
 
       <header className="mt-4 flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-mono uppercase tracking-widest text-brand-700">
             my app · project
           </p>
           <h1 className="text-2xl font-bold tracking-tight mt-1 truncate">{app.appName}</h1>
-          <p className="text-sm text-zinc-600 mt-1 line-clamp-2">{app.headline}</p>
+          {isEditingHeadline ? (
+            <form
+              action={updateHeadline}
+              className="mt-1 flex items-start gap-2"
+              data-testid="headline-edit-form"
+            >
+              <input type="hidden" name="appId" value={app.id} />
+              <textarea
+                name="headline"
+                rows={2}
+                maxLength={120}
+                defaultValue={app.headline}
+                required
+                aria-label="headline"
+                className="flex-1 text-sm rounded-btn border border-brand-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300 resize-none"
+              />
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="submit"
+                  className="text-xs font-semibold rounded-btn bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 cursor-pointer"
+                >
+                  저장
+                </button>
+                <Link
+                  href={`/apps/${app.id}`}
+                  className="text-xs text-center rounded-btn border border-zinc-200 text-zinc-700 px-3 py-1.5 hover:bg-zinc-50"
+                >
+                  취소
+                </Link>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-1 flex items-start gap-2">
+              <p className="text-sm text-zinc-600 line-clamp-2 flex-1">{app.headline}</p>
+              <Link
+                href={`/apps/${app.id}?edit=headline`}
+                aria-label="headline 편집"
+                data-testid="headline-edit-button"
+                className="text-zinc-400 hover:text-zinc-900 p-1 rounded-btn hover:bg-zinc-100 flex-shrink-0"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
         </div>
         <span
           className={`inline-flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-full ${meta.klass} flex-shrink-0`}

@@ -2,12 +2,13 @@ import 'server-only';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Readable } from 'node:stream';
-import * as tar from 'tar';
-import { customAlphabet } from 'nanoid';
-import { eq } from 'drizzle-orm';
+import type { Readable } from 'node:stream';
+import { deriveAppName } from '@/lib/apps/derive';
 import { db } from '@/lib/db/client';
 import { apps } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { customAlphabet } from 'nanoid';
+import * as tar from 'tar';
 import { easGraphQL } from './client';
 
 // appee-hello-base (ADR 0004). Slice 0 uses one shared EAS project (ADR 0005);
@@ -60,7 +61,7 @@ function deriveIdentity(headline: string): AppIdentity {
     shortId: sid,
     androidPackage: `app.appee.u${sid}`,
     slug: `u-${sid}`,
-    appName: headline.slice(0, 10).trim() || '내 앱',
+    appName: deriveAppName(headline),
   };
 }
 
