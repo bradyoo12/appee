@@ -15,6 +15,13 @@
       "when": 1779627718482,
       "tag": "0001_chunky_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779630233379,
+      "tag": "0002_unknown_power_man",
+      "breakpoints": true
     }
   ]
 }

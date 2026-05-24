@@ -1,5 +1,6 @@
 import { ArrowLeft, BatteryFull, Info, Signal } from 'lucide-react';
 import Link from 'next/link';
+import { updateHeroVariant } from './actions';
 
 type Card = {
   title: string;
@@ -88,15 +89,24 @@ function clampIndex(raw: string | undefined): number {
   return Math.min(Math.max(n, 1), CARDS.length);
 }
 
+// Card 1 (hero) is wired to the updateHeroVariant server action when appId is
+// in the URL. Other cards remain static mock until their slice arrives.
+const HERO_VARIANT_BY_PREVIEW: Record<string, 'warm' | 'mini' | 'list'> = {
+  'hero-warm': 'warm',
+  'hero-mini': 'mini',
+  'hero-list': 'list',
+};
+
 export default async function ReversePage({
   searchParams,
 }: {
-  searchParams: Promise<{ card?: string }>;
+  searchParams: Promise<{ card?: string; appId?: string }>;
 }) {
-  const { card } = await searchParams;
+  const { card, appId } = await searchParams;
   const idx = clampIndex(card);
   const current = CARDS[idx - 1] as Card;
   const cIdx = idx - 1;
+  const heroIsLive = idx === 1 && !!appId;
 
   return (
     <main className="min-h-screen px-6 py-12">
@@ -104,9 +114,13 @@ export default async function ReversePage({
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-brand-700">Step 7 · reverse fill</p>
+              <p className="text-xs font-mono uppercase tracking-widest text-brand-700">
+                Step 7 · reverse fill
+              </p>
               <h2 className="text-2xl font-bold tracking-tight mt-1">다음에 채울 것</h2>
-              <p className="text-xs text-zinc-500 mt-1">한 번에 한 카드. 적용은 즉시 폰에 반영돼요.</p>
+              <p className="text-xs text-zinc-500 mt-1">
+                한 번에 한 카드. 적용은 즉시 폰에 반영돼요.
+              </p>
             </div>
             <div className="text-xs font-mono text-zinc-500">
               <span>{idx}</span> / {CARDS.length}
@@ -114,13 +128,13 @@ export default async function ReversePage({
           </div>
 
           <div className="flex items-center gap-1.5 mb-5">
-            {CARDS.map((_, i) => {
+            {CARDS.map((c, i) => {
               const isActive = i === cIdx;
               const isDone = i < cIdx;
               const bg = isActive ? 'bg-brand-500' : isDone ? 'bg-emerald-400' : 'bg-zinc-200';
               return (
                 <span
-                  key={i}
+                  key={c.title}
                   className={`h-1.5 rounded-full transition-all ${bg}`}
                   style={{ width: isActive ? 24 : 14 }}
                 />
@@ -129,28 +143,50 @@ export default async function ReversePage({
           </div>
 
           <div className="rounded-card bg-white border border-zinc-100 shadow-soft-md p-6">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-brand-700">Recommended next</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-brand-700">
+              Recommended next
+            </p>
             <h3 className="text-2xl font-bold tracking-tight mt-1.5">{current.title}</h3>
             <p className="text-sm text-zinc-600 mt-1">{current.subtitle}</p>
 
             <div className="mt-5 grid sm:grid-cols-3 gap-3">
-              {current.options.map((o, i) => (
-                <button
-                  key={o.preview}
-                  type="button"
-                  className={`text-left rounded-card border p-3 transition-transform duration-200 hover:-translate-y-0.5 ${
-                    i === 0 ? 'border-brand-400 bg-brand-50/30' : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                  }`}
-                >
-                  <div className="aspect-[3/4] rounded-md bg-gradient-to-br from-zinc-50 to-zinc-100 flex items-center justify-center text-xs text-zinc-500 font-mono">
-                    {o.preview}
-                  </div>
-                  <p className="mt-2 text-sm font-medium">{o.label}</p>
-                  {i === 0 ? (
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-brand-700 mt-1">recommended</p>
-                  ) : null}
-                </button>
-              ))}
+              {current.options.map((o, i) => {
+                const variant = heroIsLive ? HERO_VARIANT_BY_PREVIEW[o.preview] : undefined;
+                const klass = `text-left rounded-card border p-3 transition-transform duration-200 hover:-translate-y-0.5 cursor-pointer w-full ${
+                  i === 0
+                    ? 'border-brand-400 bg-brand-50/30'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                }`;
+                const inner = (
+                  <>
+                    <div className="aspect-[3/4] rounded-md bg-gradient-to-br from-zinc-50 to-zinc-100 flex items-center justify-center text-xs text-zinc-500 font-mono">
+                      {o.preview}
+                    </div>
+                    <p className="mt-2 text-sm font-medium">{o.label}</p>
+                    {i === 0 ? (
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-brand-700 mt-1">
+                        recommended
+                      </p>
+                    ) : null}
+                  </>
+                );
+                if (heroIsLive && variant && appId) {
+                  return (
+                    <form key={o.preview} action={updateHeroVariant}>
+                      <input type="hidden" name="appId" value={appId} />
+                      <input type="hidden" name="variant" value={variant} />
+                      <button type="submit" className={klass}>
+                        {inner}
+                      </button>
+                    </form>
+                  );
+                }
+                return (
+                  <button key={o.preview} type="button" className={klass}>
+                    {inner}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="mt-5 text-xs text-zinc-500 flex items-center gap-1.5">
