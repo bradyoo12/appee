@@ -1,4 +1,13 @@
-import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  date,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 // Build lifecycle as far as our console cares about it.
 // Maps from EAS Build statuses + adds the pre-trigger 'preparing' state.
@@ -118,3 +127,19 @@ export const buildUsage = pgTable(
 
 export type BuildUsage = typeof buildUsage.$inferSelect;
 export type NewBuildUsage = typeof buildUsage.$inferInsert;
+
+// Daily message counter for the refine chat (Claude API).
+// Composite key on (user_id, day) — one row per user per UTC day.
+// Increment via UPSERT; 300/day cap is enforced in the route, not the DB.
+// No retention policy yet (rows are tiny); revisit when table grows.
+export const refineUsage = pgTable(
+  'refine_usage',
+  {
+    userId: uuid('user_id').notNull(),
+    day: date('day').notNull(),
+    count: integer('count').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })],
+);
+
+export type RefineUsage = typeof refineUsage.$inferSelect;
