@@ -104,35 +104,45 @@ export const test = base.extend<AuthFixtures>({
     }
 
     // 4) Inject the Supabase auth cookie on the browser context.
-    //    @supabase/ssr writes a single cookie named `sb-<ref>-auth-token`
-    //    whose value is a JSON array of [access_token, refresh_token, ...].
+    //    @supabase/ssr v0.5 stores the full Session as JSON, then writes
+    //    it base64url-encoded with a `base64-` prefix. If the encoded value
+    //    exceeds MAX_CHUNK_SIZE (3180 chars after URI-encoding), it is split
+    //    into `sb-<ref>-auth-token.0`, `.1`, ... chunks.
     const ref = projectRefFrom(supabaseUrl);
     const cookieName = `sb-${ref}-auth-token`;
-    const cookieValue = JSON.stringify([
-      session.access_token,
-      session.refresh_token,
-      null,
-      null,
-      null,
-    ]);
+    const sessionJson = JSON.stringify(session);
+    const encoded = `base64-${Buffer.from(sessionJson, 'utf-8').toString('base64url')}`;
+    const MAX_CHUNK_SIZE = 3180;
 
-    // Cookie domain must match the page baseURL host. Derive from env to
-    // stay in sync with playwright.config.ts; default 127.0.0.1 covers the
-    // local webServer path.
     const baseUrlRaw =
       process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${process.env.LOCAL_PORT ?? '3000'}`;
     const baseUrl = new URL(baseUrlRaw);
-    await context.addCookies([
-      {
-        name: cookieName,
-        value: cookieValue,
-        domain: baseUrl.hostname,
-        path: '/',
-        httpOnly: false,
-        secure: false,
-        sameSite: 'Lax',
-      },
-    ]);
+    const cookieDefaults = {
+      domain: baseUrl.hostname,
+      path: '/',
+      httpOnly: false,
+      secure: false,
+      sameSite: 'Lax' as const,
+    };
+
+    // Chunk based on URI-encoded length, matching @supabase/ssr's chunker.
+    const cookies: { name: string; value: string }[] = [];
+    if (encodeURIComponent(encoded).length <= MAX_CHUNK_SIZE) {
+      cookies.push({ name: cookieName, value: encoded });
+    } else {
+      let remaining = encoded;
+      let idx = 0;
+      while (remaining.length > 0) {
+        let head = remaining;
+        while (encodeURIComponent(head).length > MAX_CHUNK_SIZE) {
+          head = head.slice(0, head.length - 32);
+        }
+        cookies.push({ name: `${cookieName}.${idx}`, value: head });
+        remaining = remaining.slice(head.length);
+        idx += 1;
+      }
+    }
+    await context.addCookies(cookies.map((c) => ({ ...c, ...cookieDefaults })));
 
     // Hand the seeded app off to the test.
     await use(appRow);
