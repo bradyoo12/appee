@@ -21,29 +21,19 @@ test('refine page back link returns to detail', async ({ page, seededApp }) => {
   await page.waitForURL(`**/apps/${seededApp.id}`);
 });
 
-// Step B: scripted Q&A → 3 recommended UI patterns → pick one → confirmation.
-// No LLM, no DB write — just validates the UX shape.
-test('refine scripted dialog walks to pattern pick + confirmation', async ({ page, seededApp }) => {
+// Step C: chat is now LLM-driven (Claude API). The dialog shape is no
+// longer hardcoded, so we only assert the shell renders the chat thread
+// and an input field. End-to-end of the API path is covered by manual
+// verification on Vercel preview (requires ANTHROPIC_API_KEY).
+test('refine chat shell renders intro + input', async ({ page, seededApp }) => {
   await page.goto(`/apps/${seededApp.id}/refine`);
 
-  // Q1: 주 행동
-  await page.getByRole('button', { name: '훑어보기 · 탐색' }).click();
+  // Intro message from the assistant is visible.
+  const thread = page.getByTestId('refine-thread');
+  await expect(thread).toBeVisible();
+  await expect(thread).toContainText(/어떤 화면을 추가/);
 
-  // Q2: 정보 밀도
-  await page.getByRole('button', { name: '많이 한눈에' }).click();
-
-  // Q3: 콘텐츠 종류
-  await page.getByRole('button', { name: '이미지 · 사진' }).click();
-
-  // 3 옵션 노출
-  const options = page.getByTestId('refine-options');
-  await expect(options).toBeVisible();
-  await expect(options.getByRole('button')).toHaveCount(3);
-
-  // 픽 — image-heavy browse + dense 조합이면 'grid'가 상위에 있어야 함
-  await page.getByTestId('refine-option-grid').click();
-
-  // 픽 확인 상태
-  await expect(page.getByTestId('refine-picked-confirmation')).toBeVisible();
-  await expect(page.getByRole('button', { name: /코드 생성 시작/ })).toBeDisabled();
+  // Text input + send button.
+  await expect(page.getByLabel('message')).toBeVisible();
+  await expect(page.getByTestId('refine-send')).toBeVisible();
 });

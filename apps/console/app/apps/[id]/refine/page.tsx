@@ -56,7 +56,7 @@ export default async function RefinePage({
         </p>
       </header>
 
-      <RefineChat appName={app.appName} />
+      <RefineChat appId={app.id} />
     </main>
   );
 }
