@@ -50,10 +50,10 @@ test('preview phase renders mockup iframe + plan after pattern pick, then approv
   await expect(page.getByTestId('refine-preview-mockup')).toBeVisible();
   await expect(page.getByTestId('refine-preview-plan')).toContainText('화면 한 줄 요약');
 
-  // Approve → approved phase + disabled "코드 생성 시작" button
+  // Approve → approved phase + active "코드 생성 시작" button (#111: now wired)
   await page.getByTestId('refine-preview-approve').click();
   await expect(page.getByTestId('refine-picked-confirmation')).toBeVisible();
-  await expect(page.getByRole('button', { name: /코드 생성 시작/ })).toBeDisabled();
+  await expect(page.getByTestId('refine-emit-start')).toBeEnabled();
 });
 
 test('revision request fires preview API again with previous mockup', async ({

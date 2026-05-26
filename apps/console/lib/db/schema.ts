@@ -49,6 +49,13 @@ export const apps = pgTable(
     // enum; column is plain text to keep the migration trivial.
     heroVariant: text('hero_variant'),
 
+    // Refine flow emission target (#111). When the user approves a refine
+    // preview and clicks "코드 생성 시작", the route creates a GitHub issue
+    // in APPEE_CODEGEN_REPO and stores the issue number here. Subsequent
+    // emits for the same app return the existing number instead of creating
+    // a duplicate.
+    refineIssueNumber: integer('refine_issue_number'),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

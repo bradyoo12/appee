@@ -14,7 +14,9 @@ const PATTERNS: Record<PatternKey, { label: string; desc: string }> = {
 };
 
 type Message = { role: 'assistant' | 'user'; content: string };
-type Phase = 'asking' | 'options' | 'preview' | 'approved';
+type Phase = 'asking' | 'options' | 'preview' | 'approved' | 'emitting' | 'emitted';
+
+type EmittedIssue = { issueNumber: number; issueUrl: string };
 
 const INTRO_MESSAGE: Message = {
   role: 'assistant',
@@ -38,6 +40,9 @@ export function RefineChat({ appId }: { appId: string }) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [revising, setRevising] = useState(false);
   const [revisionText, setRevisionText] = useState('');
+
+  // Emit state (#111)
+  const [emittedIssue, setEmittedIssue] = useState<EmittedIssue | null>(null);
 
   const threadRef = useRef<HTMLOListElement>(null);
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll trigger
@@ -172,9 +177,52 @@ export function RefineChat({ appId }: { appId: string }) {
       { role: 'user', content: '이대로 좋아요' },
       {
         role: 'assistant',
-        content: `좋아요. ${PATTERNS[pickedPattern].label} 형태로 다듬을 준비가 됐어요. 다음 단계에서 GitHub 이슈와 EAS 빌드 파이프라인으로 연결됩니다.`,
+        content: `좋아요. ${PATTERNS[pickedPattern].label} 형태로 다듬을 준비가 됐어요. "코드 생성 시작"을 누르면 GitHub 이슈로 보낼게요.`,
       },
     ]);
+  }
+
+  async function startCodegen() {
+    if (!pickedPattern || phase === 'emitting') return;
+    setPhase('emitting');
+    setError(null);
+    try {
+      const res = await fetch('/api/refine/emit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          appId,
+          pickedPattern,
+          summary,
+          recommendedPatterns: recommended,
+          mockupHtml,
+          planMarkdown,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(humanError(data));
+        setPhase('approved');
+        return;
+      }
+      if (typeof data.issueNumber !== 'number' || typeof data.issueUrl !== 'string') {
+        setError('GitHub 이슈를 만들지 못했어요. 잠시 후 다시 시도해주세요.');
+        setPhase('approved');
+        return;
+      }
+      setEmittedIssue({ issueNumber: data.issueNumber, issueUrl: data.issueUrl });
+      setPhase('emitted');
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `GitHub 이슈 #${data.issueNumber} 생성됐어요. 곧 코드가 만들어집니다.`,
+        },
+      ]);
+    } catch (_err) {
+      setError('연결이 끊겼어요. 잠시 후 다시 시도해주세요.');
+      setPhase('approved');
+    }
   }
 
   return (
@@ -392,7 +440,7 @@ export function RefineChat({ appId }: { appId: string }) {
         </div>
       )}
 
-      {phase === 'approved' && pickedPattern && (
+      {(phase === 'approved' || phase === 'emitting' || phase === 'emitted') && pickedPattern && (
         <div
           data-testid="refine-picked-confirmation"
           className="rounded-card border border-brand-200 bg-brand-50/60 p-4 flex flex-col gap-3"
@@ -403,16 +451,50 @@ export function RefineChat({ appId }: { appId: string }) {
               {PATTERNS[pickedPattern].label} 형태로 다듬을 준비가 됐어요
             </p>
           </div>
-          <p className="text-xs text-zinc-600">
-            실제 코드 생성은 다음 단계에서 GitHub 이슈와 EAS 빌드 파이프라인으로 연결됩니다.
-          </p>
-          <button
-            type="button"
-            disabled
-            className="self-start inline-flex items-center gap-2 rounded-btn bg-zinc-200 text-zinc-500 text-sm font-semibold px-4 py-2 cursor-not-allowed"
-          >
-            코드 생성 시작 (곧 연결) <ArrowRight className="w-4 h-4" />
-          </button>
+
+          {phase !== 'emitted' && (
+            <p className="text-xs text-zinc-600">
+              "코드 생성 시작"을 누르면 GitHub 이슈로 보내 코드 생성을 시작합니다.
+            </p>
+          )}
+
+          {phase === 'emitted' && emittedIssue ? (
+            <div data-testid="refine-emitted" className="flex flex-col gap-2">
+              <p className="text-sm text-zinc-700">
+                GitHub 이슈{' '}
+                <a
+                  data-testid="refine-emitted-link"
+                  href={emittedIssue.issueUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-brand-700 font-semibold underline underline-offset-2"
+                >
+                  #{emittedIssue.issueNumber}
+                </a>{' '}
+                생성됐어요. 곧 코드가 만들어집니다.
+              </p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={startCodegen}
+              disabled={phase === 'emitting'}
+              data-testid="refine-emit-start"
+              className="self-start inline-flex items-center gap-2 rounded-btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-4 py-2 cursor-pointer disabled:bg-zinc-300 disabled:cursor-not-allowed"
+            >
+              {phase === 'emitting' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  이슈 만드는 중…
+                </>
+              ) : (
+                <>
+                  코드 생성 시작
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -436,5 +518,10 @@ function humanError(data: unknown): string {
   if (err === 'upstream_failed') return 'AI 응답을 받지 못했어요. 잠시 후 다시 시도해주세요.';
   if (err === 'invalid_picked_pattern') return '선택한 패턴이 올바르지 않아요.';
   if (err === 'invalid_summary') return '대화 요약이 비어 있어요. 다시 시작해주세요.';
+  if (err === 'misconfigured')
+    return 'GitHub 이슈 연결이 아직 준비 중이에요. 잠시 후 다시 시도해주세요.';
+  if (err === 'github_auth_failed')
+    return 'GitHub 인증에 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+  if (err === 'github_failed') return 'GitHub 이슈를 만들지 못했어요. 잠시 후 다시 시도해주세요.';
   return '문제가 생겼어요. 다시 시도해주세요.';
 }
