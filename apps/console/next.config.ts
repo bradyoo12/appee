@@ -1,5 +1,5 @@
-import type { NextConfig } from 'next';
 import { join } from 'node:path';
+import type { NextConfig } from 'next';
 
 // On Vercel, each serverless function bundle only contains files the tracer
 // reached from the route's entry. `templates/expo-base/` lives outside

@@ -1,9 +1,9 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Unit 5c E2E — Landing → /build (real EAS poll) → /install (real artifacts.buildUrl).
 // Run: PORT=3001 node scripts/check-eas-poll.mjs
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '.screenshots');

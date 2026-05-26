@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { apps, buildUsage } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 // EAS Build webhook landing point. EAS POSTs here when a build hits a
 // terminal state (FINISHED / ERRORED / CANCELED). We:
@@ -66,7 +66,10 @@ export async function POST(req: Request) {
 
   const parsed = EasWebhookPayload.safeParse(JSON.parse(raw));
   if (!parsed.success) {
-    return NextResponse.json({ error: 'invalid payload', issues: parsed.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: 'invalid payload', issues: parsed.error.issues },
+      { status: 400 },
+    );
   }
   const ev = parsed.data;
 

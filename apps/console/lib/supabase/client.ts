@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 // Cookies sync automatically with the server via @supabase/ssr.
 export function createClient() {
   return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   );
 }

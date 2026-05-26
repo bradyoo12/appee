@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
 // Supabase magic-link landing point. Exchanges the auth code for a session
 // (which sets the auth cookies) and redirects on into the app.

@@ -2,7 +2,10 @@ import 'server-only';
 
 const ENDPOINT = 'https://api.expo.dev/graphql';
 
-export async function easGraphQL<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+export async function easGraphQL<T>(
+  query: string,
+  variables: Record<string, unknown> = {},
+): Promise<T> {
   const token = process.env.EXPO_TOKEN;
   if (!token) throw new Error('EXPO_TOKEN not set in server env');
 

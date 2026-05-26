@@ -1,12 +1,12 @@
+import { readFile, stat, unlink } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // 5b.3 — end-to-end EAS build trigger via GraphQL.
 // Run: node --env-file=.env.local scripts/eas-trigger.mjs
 //
 // Steps: tar → uploadSession → PUT to GCS → createAndroidBuild mutation.
 // Cost: consumes one EAS Build credit on success.
 import { create } from 'tar';
-import { readFile, stat, unlink } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');
@@ -142,9 +142,12 @@ if (buildRes.errors) {
 }
 
 const result = buildRes.data.build.createAndroidBuild;
-console.log(`\n✅ Build queued`);
+console.log('\n✅ Build queued');
 console.log(`   id: ${result.build.id}`);
 console.log(`   status: ${result.build.status}`);
 console.log(`   created: ${result.build.createdAt}`);
-console.log(`   dashboard: https://expo.dev/accounts/bradyoo12/projects/appee-hello-base/builds/${result.build.id}`);
-if (result.deprecationInfo) console.log(`   deprecation: ${JSON.stringify(result.deprecationInfo)}`);
+console.log(
+  `   dashboard: https://expo.dev/accounts/bradyoo12/projects/appee-hello-base/builds/${result.build.id}`,
+);
+if (result.deprecationInfo)
+  console.log(`   deprecation: ${JSON.stringify(result.deprecationInfo)}`);

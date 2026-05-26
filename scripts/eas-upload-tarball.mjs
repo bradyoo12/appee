@@ -1,10 +1,10 @@
+import { readFile, stat, unlink } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // 5b.2 — tar templates/expo-base, PUT to EAS signed URL, verify upload.
 // Run: node --env-file=.env.local scripts/eas-upload-tarball.mjs
 // Outputs the bucketKey for use in 5b.3 (createAndroidBuild).
 import { create } from 'tar';
-import { readFile, stat, unlink } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');

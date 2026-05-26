@@ -1,9 +1,9 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Verify /build dynamic progression: dots advance over time + auto-navigates to /install.
 // Usage: PORT=3001 node scripts/check-build-dynamic.mjs
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '.screenshots');
@@ -19,9 +19,7 @@ const page = await ctx.newPage();
 await page.goto(`${base}/build`);
 
 async function dotColors() {
-  return page.$$eval('ol li span', (els) =>
-    els.map((el) => getComputedStyle(el).backgroundColor),
-  );
+  return page.$$eval('ol li span', (els) => els.map((el) => getComputedStyle(el).backgroundColor));
 }
 
 const snapshots = [];

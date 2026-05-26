@@ -32,9 +32,7 @@ const topMutations = await gql(`
 `);
 const fields = topMutations.data?.__schema?.mutationType?.fields ?? [];
 const buildRelated = fields.filter(
-  (f) =>
-    /build|asset|upload/i.test(f.name) ||
-    /build|asset|upload/i.test(f.description ?? ''),
+  (f) => /build|asset|upload/i.test(f.name) || /build|asset|upload/i.test(f.description ?? ''),
 );
 for (const f of buildRelated) {
   console.log(`${f.name} → ${f.type.name ?? f.type.kind}`);
@@ -110,9 +108,10 @@ for (const typeName of candidates) {
   );
   const inputFields = inputProbe.data?.__type?.inputFields;
   if (inputFields?.length) {
-    console.log(`  -- inputFields:`);
+    console.log('  -- inputFields:');
     for (const f of inputFields) {
-      const tn = f.type.ofType?.name ?? f.type.name ?? `${f.type.kind}<${f.type.ofType?.kind ?? '?'}>`;
+      const tn =
+        f.type.ofType?.name ?? f.type.name ?? `${f.type.kind}<${f.type.ofType?.kind ?? '?'}>`;
       console.log(`    ${f.name}: ${tn}`);
     }
   }

@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import type Stripe from 'stripe';
-import { stripe } from '@/lib/stripe/client';
 import { db } from '@/lib/db/client';
-import { subscriptions, type SubscriptionStatus } from '@/lib/db/schema';
+import { type SubscriptionStatus, subscriptions } from '@/lib/db/schema';
+import { stripe } from '@/lib/stripe/client';
+import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
 // Stripe webhook handler. Subscriptions table is updated here and
 // only here — Server Actions read from it but never write.
@@ -86,7 +86,10 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, secret);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'invalid signature';
-    return NextResponse.json({ error: `signature verification failed: ${message}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `signature verification failed: ${message}` },
+      { status: 400 },
+    );
   }
 
   try {

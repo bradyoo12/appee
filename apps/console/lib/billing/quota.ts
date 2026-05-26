@@ -1,7 +1,7 @@
 import 'server-only';
-import { and, count, eq, gte } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
-import { buildUsage, subscriptions, type SubscriptionStatus } from '@/lib/db/schema';
+import { type SubscriptionStatus, buildUsage, subscriptions } from '@/lib/db/schema';
+import { and, count, eq, gte } from 'drizzle-orm';
 
 // Per-month EAS build quota by subscription status. Anything not in this
 // map (no row, past_due, canceled, etc.) is 0 — gating up the stack
@@ -35,7 +35,7 @@ export async function getMonthlyQuota(userId: string): Promise<Quota> {
     .limit(1);
 
   const tier = sub?.status ?? null;
-  const limit = tier ? LIMITS[tier] ?? 0 : 0;
+  const limit = tier ? (LIMITS[tier] ?? 0) : 0;
 
   const since = startOfCurrentMonthUTC();
   const [row] = await db

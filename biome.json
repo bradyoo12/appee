@@ -17,7 +17,8 @@
       "**/coverage",
       "**/.vercel",
       "**/drizzle",
-      "**/*.generated.*"
+      "**/*.generated.*",
+      "**/lib/db/migrations/**"
     ]
   },
   "formatter": {

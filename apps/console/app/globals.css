@@ -20,7 +20,7 @@ body {
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.2), 0 12px 24px rgba(15, 23, 42, 0.12);
 }
 .phone::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 14px;
   left: 50%;
@@ -32,7 +32,7 @@ body {
   z-index: 30;
 }
 .phone::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   transform: translateX(-50%);

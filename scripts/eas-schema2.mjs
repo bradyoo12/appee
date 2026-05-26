@@ -29,7 +29,9 @@ const mutType = await gql(`
     }
   }
 `);
-const uploadSessionField = (mutType.data?.__type?.fields ?? []).find((f) => f.name === 'uploadSession');
+const uploadSessionField = (mutType.data?.__type?.fields ?? []).find(
+  (f) => f.name === 'uploadSession',
+);
 console.log('uploadSession field type:', JSON.stringify(uploadSessionField, null, 2));
 
 const types = [
@@ -74,9 +76,7 @@ for (const name of types) {
     console.log('fields:');
     for (const f of tt.fields) {
       const argList = (f.args ?? [])
-        .map(
-          (a) => `${a.name}: ${a.type.ofType?.name ?? a.type.name ?? a.type.kind}`,
-        )
+        .map((a) => `${a.name}: ${a.type.ofType?.name ?? a.type.name ?? a.type.kind}`)
         .join(', ');
       const retName = f.type.ofType?.name ?? f.type.name ?? f.type.kind;
       console.log(`  ${f.name}(${argList}) → ${retName}`);
