@@ -1,12 +1,12 @@
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { eq } from 'drizzle-orm';
-import { Check, CreditCard, ArrowRight } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
 import { db } from '@/lib/db/client';
-import { subscriptions, type Subscription } from '@/lib/db/schema';
+import { type Subscription, subscriptions } from '@/lib/db/schema';
 import { stripe } from '@/lib/stripe/client';
+import { createClient } from '@/lib/supabase/server';
+import { eq } from 'drizzle-orm';
+import { ArrowRight, Check, CreditCard } from 'lucide-react';
+import { headers } from 'next/headers';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 

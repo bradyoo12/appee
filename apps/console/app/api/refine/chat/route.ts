@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   if (!messages || messages.length === 0 || messages.length > MAX_MESSAGES) {
     return NextResponse.json({ error: 'invalid_messages' }, { status: 400 });
   }
-  if (messages[messages.length - 1]!.role !== 'user') {
+  if (messages[messages.length - 1]?.role !== 'user') {
     return NextResponse.json({ error: 'last_message_must_be_user' }, { status: 400 });
   }
 

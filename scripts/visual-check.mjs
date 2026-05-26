@@ -1,10 +1,10 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Quick visual check via Playwright.
 // Usage: node scripts/visual-check.mjs <path> [outName]
 //   node scripts/visual-check.mjs /build build
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '.screenshots');
@@ -52,10 +52,13 @@ if (pathname === '/build') {
       ? {
           found: true,
           className: dot.className,
-          ...['display', 'width', 'height', 'backgroundColor', 'flexShrink', 'boxShadow'].reduce((acc, k) => {
-            acc[k] = getComputedStyle(dot)[k];
-            return acc;
-          }, {}),
+          ...['display', 'width', 'height', 'backgroundColor', 'flexShrink', 'boxShadow'].reduce(
+            (acc, k) => {
+              acc[k] = getComputedStyle(dot)[k];
+              return acc;
+            },
+            {},
+          ),
         }
       : { found: false };
 

@@ -29,9 +29,7 @@ if (product) {
 const allPrices = await stripe.prices.list({ product: product.id, active: true, limit: 100 });
 let price = allPrices.data.find(
   (p) =>
-    p.currency === CURRENCY &&
-    p.recurring?.interval === INTERVAL &&
-    p.unit_amount === UNIT_AMOUNT,
+    p.currency === CURRENCY && p.recurring?.interval === INTERVAL && p.unit_amount === UNIT_AMOUNT,
 );
 if (price) {
   console.log(`price exists: ${price.id} (${price.unit_amount}c ${price.currency}/${INTERVAL})`);

@@ -1,6 +1,6 @@
+import { getBuild } from '@/lib/eas/queries';
 import { Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { getBuild } from '@/lib/eas/queries';
 
 const FIXTURE_BUILD_ID = '9866e401-0a52-46aa-b715-3072225fad3d';
 
@@ -26,8 +26,12 @@ export default async function InstallPage({
   return (
     <main className="min-h-screen flex items-start justify-center px-6 py-16">
       <div className="max-w-3xl w-full text-center">
-        <p className="text-xs font-mono uppercase tracking-widest text-emerald-700">Step 5 · install</p>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mt-2">폰으로 가져갈 시간이에요.</h1>
+        <p className="text-xs font-mono uppercase tracking-widest text-emerald-700">
+          Step 5 · install
+        </p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mt-2">
+          폰으로 가져갈 시간이에요.
+        </h1>
         <p className="text-sm text-zinc-600 mt-2">
           Android 폰의 카메라로 QR을 스캔하면 APK가 바로 설치됩니다.
           <br />
@@ -48,7 +52,7 @@ export default async function InstallPage({
               '"알 수 없는 출처 허용"을 한 번 켜고 APK를 다운로드합니다.',
               '앱이 깔리면 한 번 열어서 첫 사용량을 기록합니다.',
             ].map((text, i) => (
-              <li key={i} className="flex gap-3">
+              <li key={text} className="flex gap-3">
                 <span className="w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {i + 1}
                 </span>

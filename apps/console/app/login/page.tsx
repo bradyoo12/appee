@@ -1,7 +1,7 @@
 'use client';
-import { useState, useTransition } from 'react';
-import { Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { Mail } from 'lucide-react';
+import { useState, useTransition } from 'react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -42,7 +42,9 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="text-center max-w-sm w-full">
-        <p className="text-xs font-mono uppercase tracking-widest text-brand-700">step 1 · sign in</p>
+        <p className="text-xs font-mono uppercase tracking-widest text-brand-700">
+          step 1 · sign in
+        </p>
         <h1 className="text-3xl font-bold tracking-tight mt-3">
           <span className="font-display italic text-brand-500">appee</span>에 들어가기
         </h1>
@@ -105,7 +107,8 @@ export default function LoginPage() {
 
 function GoogleG() {
   return (
-    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 48 48" role="img" aria-label="Google">
+      <title>Google</title>
       <path
         fill="#FFC107"
         d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.5-5.9 7.7-11.3 7.7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 2.9l5.7-5.7C34.2 6.5 29.4 4.6 24 4.6 12.9 4.6 4 13.5 4 24.6S12.9 44.6 24 44.6c11 0 20-8.9 20-20 0-1.3-.1-2.7-.4-4.1z"

@@ -1,7 +1,7 @@
 import 'server-only';
+import { z } from 'zod';
 import { easGraphQL } from './client';
 import { Build } from './schemas';
-import { z } from 'zod';
 
 const GET_BUILD_QUERY = /* GraphQL */ `
   query GetBuild($id: ID!) {

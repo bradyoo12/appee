@@ -1,8 +1,8 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Verify landing → /build navigation on Deploy button click.
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '.screenshots');
@@ -22,10 +22,16 @@ const initialUrl = page.url();
 await page.getByRole('link', { name: /deploy hello world/i }).click();
 await page.waitForURL('**/build', { timeout: 5000 });
 
-console.log(JSON.stringify({
-  initialUrl,
-  afterClickUrl: page.url(),
-  navigated: page.url().endsWith('/build'),
-}, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      initialUrl,
+      afterClickUrl: page.url(),
+      navigated: page.url().endsWith('/build'),
+    },
+    null,
+    2,
+  ),
+);
 
 await browser.close();
